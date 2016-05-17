@@ -212,6 +212,11 @@ class SettingsPage
         return $this->get_setting_value('api_secret', $locale) ?: '';
     }
 
+    public function get_global_enable($locale = null)
+    {
+        return $this->get_setting_value('global_enable', $locale) ?: '';
+    }
+
     private function enable_language_fields()
     {
         $languageEnabledFields = [];
@@ -251,12 +256,8 @@ class SettingsPage
      */
     public function get_current_language()
     {
-        if ($this->languages_is_enabled() && isset(PLL()->model->options['domains'])) {
-            foreach (PLL()->model->options['domains'] as $locale => $domain) {
-                if (strpos($domain, getenv('HTTP_HOST')) !== false) {
-                    return PLL()->model->get_language($locale);
-                }
-            }
+        if ($this->languages_is_enabled()) {
+            return PLL()->model->get_language(pll_current_language());
         }
         return null;
     }
@@ -274,7 +275,7 @@ class SettingsPage
 
     }
 
-    private function get_wa_user_roles($locale = null)
+    public function get_wa_user_roles($locale = null)
     {
         $service = new ServiceOAuth(
             $this->get_api_user($locale),
