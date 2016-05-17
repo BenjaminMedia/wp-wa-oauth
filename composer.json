@@ -1,0 +1,38 @@
+{
+  "name": "benjaminmedia/wp-wa-oauth",
+  "description": "Log in users from the WA platform",
+  "type": "wordpress-plugin",
+  "keywords": ["wordpress", "plugin"],
+  "homepage": "https://github.com/BenjaminMedia/wp-wa-oauth",
+  "repositories":[
+    {
+      "type": "composer",
+      "url": "http://wpackagist.org"
+    }
+  ],
+  "authors": [
+    {
+      "name": "Bonnier Publications",
+      "email": "interactive@bonnier.dk",
+      "homepage": "http://bonnierpublications.com"
+    },
+    {
+      "name": "Alf Henderson",
+      "email": "alf.henderson@bonnier.dk",
+      "homepage": ""
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/BenjaminMedia/wp-wa-oauth/issues",
+    "source": "https://github.com/BenjaminMedia/wp-wa-oauth"
+  },
+  "autoload": {
+    "psr-4": {
+      "Bonnier\\WP\\WaOauth\\": "src/Bonnier/WP/WaOauth/"
+    }
+  },
+  "require": {
+    "php": ">=5.4",
+    "wp-api/wp-api": "^2.0-beta12"
+  }
+}

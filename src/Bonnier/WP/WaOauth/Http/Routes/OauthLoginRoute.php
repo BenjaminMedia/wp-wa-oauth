@@ -2,6 +2,7 @@
 
 namespace Bonnier\WP\WaOauth\Http\Routes;
 
+use Bonnier\WP\WaOauth\Admin\PostMetaBox;
 use Bonnier\WP\WaOauth\Http\Exceptions\HttpException;
 use Exception;
 use Bonnier\WP\WaOauth\Services\ServiceOAuth;
@@ -36,12 +37,17 @@ class OauthLoginRoute
     /**
      * The access token cookie lifetime.
      */
-    const COOKIE_LIFETIME_HOURS = 24;
+    const ACCESS_TOKEN_LIFETIME_HOURS = 24;
 
     /**
      * The access token cookie key.
      */
-    const COOKIE_KEY = 'wa_token';
+    const ACCESS_TOKEN_COOKIE_KEY = 'bp_wa_oauth_token';
+
+    /**
+     * The auth destination cookie key.
+     */
+    const AUTH_DESTINATION_COOKIE_KEY = 'bp_wa_oauth_auth_destination';
 
     /* @var SettingsPage $settings */
     private $settings;
@@ -73,10 +79,21 @@ class OauthLoginRoute
      */
     public function login(WP_REST_Request $request)
     {
-        $this->service = $this->get_oauth_service();
+        $redirectUri = $request->get_param('redirectUri');
+        $postRequiredRole = null;
 
-        // Persist admin destination
-        //$this->setAdminDestination();
+        // Check for overriding settings from post
+        if($postId = url_to_postid($redirectUri)) {
+            if(PostMetaBox::post_is_unlocked($postId)) {
+                $this->redirect($redirectUri);
+            }
+            if($requiredRole = PostMetaBox::post_required_role($postId)) {
+                $postRequiredRole = $requiredRole;
+            }
+        }
+
+        // Persist auth destination
+        $this->set_auth_destination($redirectUri);
 
         // Get user from admin service
         try {
@@ -85,46 +102,62 @@ class OauthLoginRoute
             return new WP_REST_Response(['error' => $e->getMessage()], $e->getCode());
         }
 
-
         // If the user is not logged in, we redirect to the login screen.
         if (!$waUser) {
-            $this->trigger_login_flow();
+            $this->trigger_login_flow($postRequiredRole);
+        }
+
+        // Check if auth destination has been set
+        $redirect = $this->get_auth_destination();
+
+        if ($redirect) {
+            //redirect to auth destination
+            $this->redirect($redirect);
         }
 
         return new WP_REST_Response($waUser, 200);
+    }
 
-        // Get the matching local user
-        //$localUser = $this->getLocalUser($waUser);
+    /**
+     * Check if the current request is authenticated
+     *
+     * @return bool
+     */
+    public function is_authenticated($postId = null)
+    {
+        if(!$postId) {
+            $postId = get_the_ID();
+        }
 
-        // Set the jwt token from user
-        //$this->auth->setUser($localUser);
-
-        // Check if admin destination has been set
-        //$adminRedirect = $this->getAdminDestination();
-
-        //if($adminRedirect) {
-
-        // redirect to admin destination with token
-        //  return redirect($adminRedirect);
-
-        //}
-
-
+        $this->service = $this->get_oauth_service();
+        if ($user = $this->get_wa_user()) {
+            if($postId && !PostMetaBox::post_is_unlocked($postId)) {
+                if(!in_array(PostMetaBox::post_required_role($postId), $user->roles)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
 
     /**
      * Triggers the login flow by redirecting the user to the login Url
-     *
+     * @param null $requiredRole
      */
-    private function trigger_login_flow()
+    private function trigger_login_flow($requiredRole = null)
     {
         $currentLang = $this->settings->get_current_language();
+
+        if(!$requiredRole) {
+            $requiredRole = $this->settings->get_required_user_role($currentLang->locale);
+        }
 
         $this->redirect(
             $this->service->getLoginUrl(
                 $this->get_redirect_uri(),
-                $this->settings->get_required_user_role($currentLang->locale))
+                $requiredRole)
         );
 
     }
@@ -132,19 +165,21 @@ class OauthLoginRoute
     /**
      *
      *
-     * @param WP_REST_Request $request
+     * @param WP_REST_Request|null $request
      * @return mixed
      * @throws Exception|HttpException
      */
-    private function get_wa_user(WP_REST_Request $request)
+    public function get_wa_user($request = null)
     {
+        $this->service = $this->get_oauth_service();
+
         $redirectUri = $this->get_redirect_uri();
 
         if ($accessToken = $this->get_access_token()) {
 
             $this->service->setAccessToken($accessToken);
 
-        } elseif ($grantToken = $request->get_param('code')) {
+        } elseif ($request && $grantToken = $request->get_param('code')) {
 
             $this->service->setGrantToken($redirectUri, $grantToken);
             $this->persist_access_token($this->service->getAccessToken());
@@ -182,7 +217,7 @@ class OauthLoginRoute
      */
     private function get_access_token()
     {
-        return isset($_COOKIE[self::COOKIE_KEY]) ? $_COOKIE[self::COOKIE_KEY] : false;
+        return isset($_COOKIE[self::ACCESS_TOKEN_COOKIE_KEY]) ? $_COOKIE[self::ACCESS_TOKEN_COOKIE_KEY] : false;
     }
 
     /**
@@ -192,7 +227,7 @@ class OauthLoginRoute
      */
     private function persist_access_token($token)
     {
-        setcookie(self::COOKIE_KEY, $token, $this->get_cookie_lifetime(), '/');
+        setcookie(self::ACCESS_TOKEN_COOKIE_KEY, $token, $this->get_access_token_lifetime(), '/');
     }
 
     /**
@@ -200,9 +235,29 @@ class OauthLoginRoute
      *
      * @return int
      */
-    private function get_cookie_lifetime()
+    private function get_access_token_lifetime()
     {
-        return time() + (self::COOKIE_LIFETIME_HOURS * 60 * 60);
+        return time() + (self::ACCESS_TOKEN_LIFETIME_HOURS * 60 * 60);
+    }
+
+    /**
+     * Persist the auth destination in a cookie
+     *
+     * @param $destination
+     */
+    private function set_auth_destination($destination)
+    {
+        setcookie(self::AUTH_DESTINATION_COOKIE_KEY, $destination, time() + (1 * 60 * 60), '/');
+    }
+
+    /**
+     * Get the auth destination from the cookie
+     *
+     * @return bool
+     */
+    private function get_auth_destination()
+    {
+        return isset($_COOKIE[self::AUTH_DESTINATION_COOKIE_KEY]) ? $_COOKIE[self::AUTH_DESTINATION_COOKIE_KEY] : false;
     }
 
     /**

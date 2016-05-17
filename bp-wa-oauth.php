@@ -10,6 +10,8 @@
 
 namespace Bonnier\WP\WaOauth;
 
+use Bonnier\WP\WaOauth\Admin\PostMetaBox;
+use Bonnier\WP\WaOauth\Assets\Scripts;
 use Bonnier\WP\WaOauth\Http\Routes\OauthLoginRoute;
 use Bonnier\WP\WaOauth\Settings\SettingsPage;
 
@@ -26,6 +28,8 @@ spl_autoload_register(function ($className) {
     }
 });
 
+// Load plugin api
+require_once (__DIR__ . '/'.Plugin::CLASS_DIR.'/api.php');
 
 class Plugin
 {
@@ -41,7 +45,7 @@ class Plugin
      */
     private static $instance;
 
-    private $settings;
+    public $settings;
 
     private $loginRoute;
 
@@ -83,13 +87,22 @@ class Plugin
         $this->loginRoute = new OauthLoginRoute($this->settings);
     }
 
+    private function boostrap() {
+        Scripts::bootstrap();
+        PostMetaBox::register_meta_box();
+
+    }
+
     /**
      * Returns the instance of this class.
      */
     public static function instance()
     {
-        if (!isset(self::$instance)) {
+        if (!self::$instance) {
             self::$instance = new self;
+            global $bp_wa_oauth;
+            $bp_wa_oauth = self::$instance;
+            self::$instance->boostrap();
 
             /**
              * Run after the plugin has been loaded.
@@ -99,6 +112,32 @@ class Plugin
 
         return self::$instance;
     }
+
+    public function is_authenticated($postId = null) {
+        return $this->loginRoute->is_authenticated($postId = null);
+    }
+
+    public function get_user() {
+        return $this->loginRoute->get_wa_user();
+    }
+
+    public function is_locked($postId = null) {
+
+        if(!$postId) {
+            $postId = get_the_ID();
+        }
+
+        $currentLang = $this->settings->get_current_language();
+
+        $locale = $currentLang ? $currentLang->locale: null;
+
+        $globalLock = $this->settings->get_global_enable($locale);
+        $postUnlocked = PostMetaBox::post_is_unlocked($postId);
+
+        return $postUnlocked ? false : $globalLock;
+    }
+
+
 }
 
 /**
