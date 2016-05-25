@@ -13,7 +13,7 @@ class SettingsPage
     const SETTINGS_SECTION = 'bp_wa_oauth_settings_section';
     const SETTINGS_PAGE = 'bp_wa_oauth_settings_page';
     const API_ENDPOINT_FALLBACK = 'http://woman.dk/';
-    const NOTICE_PREFIX = 'Bp Wa Oauth:';
+    const NOTICE_PREFIX = 'Bonnier Wa Oauth:';
 
     private $settingsFields = [
         'api_key' => [
@@ -70,7 +70,7 @@ class SettingsPage
         // This page will be under "Settings"
         add_options_page(
             'Settings Admin',
-            'Bp WA Oauth',
+            'Bonnier WA OAuth',
             'manage_options',
             self::SETTINGS_PAGE,
             array($this, 'create_admin_page')
@@ -115,7 +115,7 @@ class SettingsPage
 
         add_settings_section(
             self::SETTINGS_SECTION, // ID
-            'Wp WA Oauth Settings', // Title
+            'Bonnier WA OAuth Settings', // Title
             array($this, 'print_section_info'), // Callback
             self::SETTINGS_PAGE // Page
         );

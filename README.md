@@ -10,6 +10,7 @@ unauthorized users.
 - WordPress 4.4 or higher
 - WP REST API must be installed and activated version 2.0 or higher http://v2.wp-api.org/
 - Language support (Optional) Polylang plugin must installed and activated version 1.8.4 or higher
+- PHP 5.6 or higher
 
 ### Installation/Configuration
 
