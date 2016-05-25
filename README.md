@@ -44,7 +44,7 @@ If you have multiple languages versions of the site, make sure that you use the 
 
 If you wish specific pages to be unlocked or require another user role than the Globally set.
 Then you may visit the the edit page for each page/post and here you will find a meta
-box called: 'Bp WA Oauth locked content'. Any setting you make here will override
+box called: 'WA OAuth locked content'. Any setting you make here will override
 the Global settings you have set.
 
 ### Usage Example:
