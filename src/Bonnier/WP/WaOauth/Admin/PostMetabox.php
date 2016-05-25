@@ -18,7 +18,7 @@ class PostMetaBox
     public static function register_meta_box()
     {
         add_action('do_meta_boxes', function(){
-            add_meta_box('bp_wa_oauth_unlock', 'Bp Wa Oauth locked content', [__CLASS__, 'meta_box_content']);
+            add_meta_box('bp_wa_oauth_unlock', 'WA OAuth locked content', [__CLASS__, 'meta_box_content']);
         });
 
         add_action('save_post', [__CLASS__, 'save_meta_box_settings']);
