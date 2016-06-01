@@ -132,7 +132,8 @@ class OauthLoginRoute
         $this->service = $this->get_oauth_service();
         if ($user = $this->get_wa_user()) {
             if($postId && !PostMetaBox::post_is_unlocked($postId)) {
-                if(!in_array(PostMetaBox::post_required_role($postId), $user->roles)) {
+                $postRequiredRole = PostMetaBox::post_required_role($postId);
+                if(!empty($postRequiredRole) && !in_array($postRequiredRole, $user->roles)) {
                     return false;
                 }
             }
