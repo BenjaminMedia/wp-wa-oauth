@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Bonnier WhiteAlbum OAuth
- * Version: 1.0.2
+ * Version: 1.1.0
  * Plugin URI: https://github.com/BenjaminMedia/wp-wa-oauth
  * Description: This plugin allows you to integrate your site with the whitealbum oauth user api
  * Author: Bonnier - Alf Henderson
@@ -13,6 +13,8 @@ namespace Bonnier\WP\WaOauth;
 use Bonnier\WP\WaOauth\Admin\PostMetaBox;
 use Bonnier\WP\WaOauth\Assets\Scripts;
 use Bonnier\WP\WaOauth\Http\Routes\OauthLoginRoute;
+use Bonnier\WP\WaOauth\Http\Routes\UserUpdateCallbackRoute;
+use Bonnier\WP\WaOauth\Models\User;
 use Bonnier\WP\WaOauth\Settings\SettingsPage;
 
 // Do not access this file directly
@@ -85,12 +87,12 @@ class Plugin
 
         $this->settings = new SettingsPage();
         $this->loginRoute = new OauthLoginRoute($this->settings);
+        new UserUpdateCallbackRoute($this->settings);
     }
 
     private function boostrap() {
         Scripts::bootstrap();
         PostMetaBox::register_meta_box();
-
     }
 
     /**
@@ -118,7 +120,11 @@ class Plugin
     }
 
     public function get_user() {
-        return $this->loginRoute->get_wa_user();
+        $waUser = $this->loginRoute->get_wa_user();
+        if($this->settings->get_create_local_user($this->settings->get_current_locale())) {
+            return User::get_local_user($waUser);
+        }
+        return $waUser;
     }
 
     public function is_locked($postId = null) {
@@ -143,12 +149,9 @@ class Plugin
 /**
  * @return Plugin $instance returns an instance of the plugin
  */
-
 function instance()
 {
     return Plugin::instance();
 }
 
 add_action('plugins_loaded', __NAMESPACE__ . '\instance', 0);
-
-
