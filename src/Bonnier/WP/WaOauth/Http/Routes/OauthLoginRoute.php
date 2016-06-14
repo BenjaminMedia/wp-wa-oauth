@@ -4,6 +4,7 @@ namespace Bonnier\WP\WaOauth\Http\Routes;
 
 use Bonnier\WP\WaOauth\Admin\PostMetaBox;
 use Bonnier\WP\WaOauth\Http\Exceptions\HttpException;
+use Bonnier\WP\WaOauth\Models\User;
 use Exception;
 use Bonnier\WP\WaOauth\Services\ServiceOAuth;
 use Bonnier\WP\WaOauth\Settings\SettingsPage;
@@ -30,9 +31,9 @@ class OauthLoginRoute
     const LOGIN_ROUTE = '/oauth/login';
 
     /**
-     * The get user route.
+     * The logout route.
      */
-    const GET_USER_ROUTE = '/oauth/user';
+    const LOGOUT_ROUTE = '/oauth/logout';
 
     /**
      * The access token cookie lifetime.
@@ -68,6 +69,10 @@ class OauthLoginRoute
                 'methods' => 'GET, POST',
                 'callback' => [$this, 'login'],
             ]);
+            register_rest_route($this->get_route_namespace(), self::LOGOUT_ROUTE, [
+                'methods' => 'GET, POST',
+                'callback' => [$this, 'logout'],
+            ]);;
         });
     }
 
@@ -107,15 +112,26 @@ class OauthLoginRoute
             $this->trigger_login_flow($postRequiredRole);
         }
 
+        // Save the user locally if the create_local_user setting is on
+        if($this->settings->get_create_local_user($this->settings->get_current_locale())) {
+
+            User::create_local_user($waUser, $this->get_access_token());
+
+            // Auto login local user if the auto_login_local_user setting is on
+            if($this->settings->get_auto_login_local_user($this->settings->get_current_locale())) {
+                User::wp_login_user(User::get_local_user($waUser));
+            }
+        }
+
         // Check if auth destination has been set
         $redirect = $this->get_auth_destination();
 
-        if ($redirect) {
-            //redirect to auth destination
-            $this->redirect($redirect);
+        if (!$redirect) {
+            // Redirect to user profile
+            $redirect = $waUser->url;
         }
 
-        return new WP_REST_Response($waUser, 200);
+        $this->redirect($redirect);
     }
 
     /**
@@ -140,6 +156,29 @@ class OauthLoginRoute
             return true;
         }
         return false;
+    }
+
+    /**
+     * The function that handles the user logout request
+     *
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response
+     */
+    public function logout(WP_REST_Request $request) {
+
+        $this->destroy_access_token();
+
+        if($this->settings->get_create_local_user($this->settings->get_current_locale())) {
+            wp_logout();
+        }
+
+        $redirectUri = $request->get_param('redirectUri');
+
+        if($redirectUri) {
+            $this->redirect($redirectUri);
+        }
+
+        return new WP_REST_Response('ok', 200);
     }
 
 
@@ -231,6 +270,13 @@ class OauthLoginRoute
         setcookie(self::ACCESS_TOKEN_COOKIE_KEY, $token, $this->get_access_token_lifetime(), '/');
     }
 
+    private function destroy_access_token() {
+        if(isset($_COOKIE[self::ACCESS_TOKEN_COOKIE_KEY])) {
+            unset($_COOKIE[self::ACCESS_TOKEN_COOKIE_KEY]);
+        }
+        setcookie(self::ACCESS_TOKEN_COOKIE_KEY, '', time() - 3600, '/');
+    }
+
     /**
      * Gets the cookie lifetime
      *
@@ -307,11 +353,7 @@ class OauthLoginRoute
             return $this->service;
         }
 
-        $locale = null;
-
-        if ($currentLang = $this->settings->get_current_language()) {
-            $locale = $currentLang->locale;
-        }
+        $locale = $this->settings->get_current_locale();
 
         return new ServiceOAuth(
             $this->settings->get_api_user($locale),
@@ -319,5 +361,4 @@ class OauthLoginRoute
             $this->settings->get_api_endpoint($locale)
         );
     }
-
 }
