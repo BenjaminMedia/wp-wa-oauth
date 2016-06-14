@@ -14,6 +14,8 @@ class SettingsPage
     const SETTINGS_PAGE = 'bp_wa_oauth_settings_page';
     const API_ENDPOINT_FALLBACK = 'http://woman.dk/';
     const NOTICE_PREFIX = 'Bonnier Wa Oauth:';
+    const ROLES_PREFIX = 'bp_wa_';
+    const ROLE_CAPABILITIES_KEY = 'bp_wa_roles_capabilities';
 
     private $settingsFields = [
         'api_key' => [
@@ -36,6 +38,14 @@ class SettingsPage
             'type' => 'select',
             'name' => 'User Role Required',
             'options_callback' => 'get_wa_user_roles'
+        ],
+        'create_local_user' => [
+            'type' => 'checkbox',
+            'name' => 'Create local user',
+        ],
+        'auto_login_local_user' => [
+            'type' => 'checkbox',
+            'name' => 'Auto login local user',
         ],
     ];
 
@@ -182,6 +192,10 @@ class SettingsPage
 
     public function get_setting_value($settingKey, $locale = null)
     {
+        if(!$this->settingsValues) {
+            $this->settingsValues = get_option(self::SETTINGS_KEY);
+        }
+
         if ($locale) {
             $settingKey = $locale . '_' . $settingKey;
         }
@@ -215,6 +229,16 @@ class SettingsPage
     public function get_global_enable($locale = null)
     {
         return $this->get_setting_value('global_enable', $locale) ?: '';
+    }
+
+    public function get_create_local_user($locale = null)
+    {
+        return $this->get_setting_value('create_local_user', $locale) ?: '';
+    }
+
+    public function get_auto_login_local_user($locale = null)
+    {
+        return $this->get_setting_value('auto_login_local_user', $locale) ?: '';
     }
 
     private function enable_language_fields()
@@ -262,6 +286,11 @@ class SettingsPage
         return null;
     }
 
+    public function get_current_locale() {
+        $currentLang = $this->get_current_language();
+        return $currentLang ? $currentLang->locale : null;
+    }
+
     private function get_select_field_options($field)
     {
         if (isset($field['options_callback'])) {
@@ -284,7 +313,9 @@ class SettingsPage
         );
 
         try {
-            return $service->getUserRoleList();
+            $userRoles = $service->getUserRoleList();
+            $this->create_wp_user_roles($userRoles);
+            return $userRoles;
         } catch (Exception $e) {
             $this->print_error('Failed fetching user roles: ' . $e->getMessage());
             return false;
@@ -318,6 +349,31 @@ class SettingsPage
 
         if ($fieldOutput) {
             print $fieldOutput;
+        }
+    }
+
+    private function create_wp_user_roles($roles) {
+
+        if (is_array($roles)) {
+            foreach ($roles as $role) {
+
+                $roleKey = self::ROLES_PREFIX . $role['system_key'];
+
+                $defaultCapabilities = [
+                    'read' => true
+                ];
+
+                $capabilities = apply_filters($roleKey . '_capabilities', $defaultCapabilities);
+                $existingRole = get_role($roleKey);
+
+                if($existingRole && count(array_diff_assoc($existingRole->capabilities, $capabilities)) > 0 ) {
+                    remove_role($roleKey);
+                }
+                add_role($roleKey,
+                    'Bonnier WhiteAlbum '.$role['name'],
+                    $capabilities
+                );
+            }
         }
     }
 
