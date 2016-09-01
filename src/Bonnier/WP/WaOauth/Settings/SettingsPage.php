@@ -223,7 +223,7 @@ class SettingsPage
 
     public function get_required_user_role($locale = null)
     {
-        return $this->get_setting_value('api_secret', $locale) ?: '';
+        return $this->get_setting_value('user_role', $locale) ?: '';
     }
 
     public function get_global_enable($locale = null)
