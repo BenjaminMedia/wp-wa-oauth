@@ -188,10 +188,10 @@ class OauthLoginRoute
      */
     private function trigger_login_flow($requiredRole = null)
     {
-        $currentLang = $this->settings->get_current_language();
+        $currentLocale = $this->settings->get_current_locale();
 
         if(!$requiredRole) {
-            $requiredRole = $this->settings->get_required_user_role($currentLang->locale);
+            $requiredRole = $this->settings->get_required_user_role($currentLocale);
         }
 
         $this->redirect(
