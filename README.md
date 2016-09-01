@@ -72,14 +72,14 @@ the following filters to a plugin or your functions.php file.
 ``` php
 // To override the default capabilities you should implement a filter like so
 
-add_filter('bp_wa_users_capabilities', function($defualt) {
+add_filter('bp_wa_users_capabilities', function($default) {
 	return array_merge($default, ['edit_posts' => false]);
 });
 
 // you can either extend the default capabilities by doing an array merge or,
 // you can override the capabilities completely by returning a new array like so
 
-add_filter('bp_wa_subscribers_capabilities', function($defualt) {
+add_filter('bp_wa_subscribers_capabilities', function($default) {
 	return ['edit_posts' => true];
 });
 
