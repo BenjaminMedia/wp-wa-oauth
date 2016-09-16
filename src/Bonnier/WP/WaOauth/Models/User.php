@@ -8,6 +8,7 @@ use WP_User;
 class User
 {
     const ACCESS_TOKEN_META_KEY = 'bp_wa_oauth_access_token';
+    const ON_USER_UPDATE_HOOK = 'bp_wa_oauth_on_user_update';
 
     public static function get_local_user_id($waId) {
         global $wpdb;
@@ -31,6 +32,10 @@ class User
         $localUser = self::set_user_props($localUser, $waUser);
 
         $userId = wp_insert_user($localUser);
+
+        $localUser = apply_filters(self::ON_USER_UPDATE_HOOK, $localUser);
+
+        wp_update_user($localUser);
 
         self::set_access_token($userId, $accessToken);
 
@@ -59,6 +64,8 @@ class User
 
             $localUser = self::set_user_props($localUser, $waUser);
 
+            $localUser = apply_filters(self::ON_USER_UPDATE_HOOK, $localUser);
+
             $updated = wp_update_user($localUser);
 
             return ! is_wp_error($updated);
@@ -67,6 +74,7 @@ class User
     }
 
     private static function set_user_props($localUser, $waUser) {
+        
         $localUser->user_login = $waUser->username;
         $localUser->first_name = $waUser->first_name;
         $localUser->last_name = $waUser->last_name;
