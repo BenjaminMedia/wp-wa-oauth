@@ -87,6 +87,68 @@ add_filter('bp_wa_subscribers_capabilities', function($default) {
 
 ```
 
+###### Hooking into the update of local user
+
+As of version 1.2.0 and up of the plugin you may now hook into the update call of the local user.
+This is done by adding a WordPress filter using the add_filter method, an example of this can be seen below:
+
+``` php
+add_filter('bp_wa_oauth_on_user_update', function($users){
+
+	$localUser = $users['wp']; // Local user object and Instance of the WP_User class
+	$waUser = $users['wa']; // WhiteAlbum user object an instance of stdClass
+
+	// Set the user_url property to the profile_image url
+	$localUser->user_url = $waUser->profile_image->url;
+
+	// You can also save custom_user meta
+	update_user_meta($localUser->ID, 'user_birth_date', $waUser->birthdate);
+
+	// it is important to remember to return the $localUser variable otherwise the changes made will not be saved.
+	return $localUser;
+
+});
+```
+
+Here is an example of the data that is returned by the Wa login service:
+
+``` javascript
+{
+	id: 621905,
+	url: "http://woman.dk/users/test-account",
+	path: "/users/test-account",
+	username: "test-account",
+	first_name: "Test",
+	last_name: "Account",
+	gender: "male",
+	birthdate: "1925-06-12",
+	address: "",
+	zip: "",
+	city: "",
+	email: "aa@attmatr.com",
+	roles: [
+		"users"
+	],
+	banned: false,
+	unread_message_count: 0,
+	profile_image: {
+		id: 1291263,
+		url: "http://bonnier.imgix.net/ladygaga-z6VF3a4XTgSQEraVN-qmRQ.jpg",
+		copyright: null,
+		title: null,
+		description: null,
+		uuid: "ladygaga-z6VF3a4XTgSQEraVN-qmRQ.jpg",
+		crops: [ ],
+		alt_text: null,
+		width: 400,
+		height: 300
+	},
+	cover_image: null
+}
+
+```
+
+
 #### User update callbacks
 
 If you have the create local users option enabled, then what might happen is

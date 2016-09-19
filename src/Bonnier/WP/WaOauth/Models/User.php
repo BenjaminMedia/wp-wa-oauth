@@ -33,13 +33,11 @@ class User
 
         $userId = wp_insert_user($localUser);
 
-        $localUser = apply_filters(self::ON_USER_UPDATE_HOOK, $localUser);
-
-        wp_update_user($localUser);
-
         self::set_access_token($userId, $accessToken);
 
         update_user_meta($userId, 'wa_user_id', $waUser->id);
+
+        self::update_local_user($userId, $waUser);
     }
 
     public static function get_local_user($waUser) {
@@ -64,7 +62,10 @@ class User
 
             $localUser = self::set_user_props($localUser, $waUser);
 
-            $localUser = apply_filters(self::ON_USER_UPDATE_HOOK, $localUser);
+            $localUser = apply_filters(self::ON_USER_UPDATE_HOOK, [
+                'wp' => $localUser,
+                'wa' => $waUser
+            ]);
 
             $updated = wp_update_user($localUser);
 
