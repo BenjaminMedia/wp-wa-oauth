@@ -247,7 +247,7 @@ class OauthLoginRoute
      */
     private function get_route_namespace()
     {
-        return self::PLUGIN_PREFIX . DIRECTORY_SEPARATOR . self::VERSION;
+        return self::PLUGIN_PREFIX . '/' . self::VERSION;
     }
 
     /**
@@ -335,9 +335,9 @@ class OauthLoginRoute
     private function get_redirect_uri()
     {
         return $this->get_host()
-        . DIRECTORY_SEPARATOR
+        . '/'
         . self::BASE_PREFIX
-        . DIRECTORY_SEPARATOR
+        . '/'
         . $this->get_route_namespace()
         . self::LOGIN_ROUTE;
     }

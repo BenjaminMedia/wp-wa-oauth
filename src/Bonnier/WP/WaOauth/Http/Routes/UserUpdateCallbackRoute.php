@@ -105,7 +105,7 @@ class UserUpdateCallbackRoute
      */
     private function get_route_namespace()
     {
-        return self::PLUGIN_PREFIX . DIRECTORY_SEPARATOR . self::VERSION;
+        return self::PLUGIN_PREFIX . '/' . self::VERSION;
     }
 
 
