@@ -17,6 +17,19 @@ class User
         );
     }
 
+    public static function get_user_id_from_email($email) {
+        global $wpdb;
+        return $wpdb->get_var(
+            $wpdb->prepare("SELECT ID FROM wp_users WHERE user_email='%s'", $email)
+        );
+    }
+
+    public static function update_user_nicename($userId, $nicename) {
+        global $wpdb;
+        return $wpdb->update('wp_users', ['user_nicename' => $nicename], ['ID' => $userId], ['%s'], ['%d']);
+    }
+
+
     public static function get_access_token($userId) {
         return get_user_meta($userId, self::ACCESS_TOKEN_META_KEY, true);
     }
@@ -27,11 +40,14 @@ class User
 
     public static function create_local_user($waUser, $accessToken) {
 
-        $localUser = new WP_User(self::get_local_user_id($waUser->id));
+        $localUser = static::get_local_user($waUser);
 
         $localUser = self::set_user_props($localUser, $waUser);
 
         $userId = wp_insert_user($localUser);
+
+        // We have to update the user nicename because wp appends -2 when we call wp_insert_user
+        self::update_user_nicename($userId, $waUser->username);
 
         self::set_access_token($userId, $accessToken);
 
@@ -40,8 +56,16 @@ class User
         self::update_local_user($userId, $waUser);
     }
 
+    /**
+     * @param $waUser
+     *
+     * @return WP_User|null
+     */
     public static function get_local_user($waUser) {
         $localUser = new WP_User(self::get_local_user_id($waUser->id));
+        if(!$localUser->exists()) { // check if user can be found by email
+            $localUser = new WP_User(self::get_user_id_from_email($waUser->email));
+        }
         return $localUser ?: null;
     }
 
@@ -74,11 +98,14 @@ class User
         return false;
     }
 
-    private static function set_user_props($localUser, $waUser) {
+    private static function set_user_props(WP_User $localUser, $waUser) {
         
         $localUser->user_login = $waUser->username;
         $localUser->first_name = $waUser->first_name;
         $localUser->last_name = $waUser->last_name;
+        $localUser->user_nicename = $waUser->username;
+        $localUser->display_name = $waUser->username;
+        $localUser->nickname = $waUser->username;
         $localUser->user_url = $waUser->url;
         $localUser->user_email = $waUser->email;
 
