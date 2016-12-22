@@ -24,9 +24,9 @@ class User
         );
     }
 
-    public static function update_user_nicename_($userId, $nicename) {
+    public static function update_user_nicename($userId, $nicename) {
         global $wpdb;
-        return $wpdb->update('wp_users', ['nicename' => $nicename], ['ID', $userId] ['%s'], ['%d']);
+        return $wpdb->update('wp_users', ['user_nicename' => $nicename], ['ID' => $userId], ['%s'], ['%d']);
     }
 
 
