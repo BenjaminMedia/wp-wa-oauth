@@ -55,7 +55,7 @@ As of version 1.1.0 and up the plugin now supports creating local users.
 This means that you from the plugin settings page can toggle wether you
 want the plugin to create WordPress users after they have logged in.
 
-If you enable this feature you may also choose an option wether the WordPress
+If you enable this feature you may also choose an option whether the WordPress
 user should be automatically logged in to WordPress upon authenticating with WA.
 
 Users will be given custom roles created from the roles that WA delivers: currently
@@ -64,6 +64,10 @@ with existing WordPress roles the role names will be prefixed with ```bp_wa_```
 meaning the final role names will be ```bp_wa_users``` and ```bp_wa_subscribers```.
 
 Both roles will be given only the read access this, will allow users to edit/view their profile and nothing in WordPress and nothing else.
+
+As of version 1.2.2 the plugin now hijacks already existing users that have the same email address
+as the logged in user from WA. The plugin will update the local user fields with the fields from the 
+WA user.
 
 ###### Customizing role capabilities:
 You may override the default capabilities of the roles created you should add

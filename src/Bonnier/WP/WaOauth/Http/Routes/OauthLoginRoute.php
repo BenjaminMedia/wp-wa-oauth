@@ -137,6 +137,8 @@ class OauthLoginRoute
     /**
      * Check if the current request is authenticated
      *
+     * @param null $postId
+     *
      * @return bool
      */
     public function is_authenticated($postId = null)
