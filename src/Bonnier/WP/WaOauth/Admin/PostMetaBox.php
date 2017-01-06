@@ -39,6 +39,11 @@ class PostMetaBox
         $fieldOutput .= "<label>Required role to view content </label>";
         $fieldOutput .= "<select name='bp_wa_oauth_required_role'>";
         $options = $plugin->settings->get_wa_user_roles();
+        $userRoles = array_map(function($option){
+            return $option['system_key'];
+        }, $options);
+        $defaultSelected = in_array($fieldValue, $userRoles) ? 'selected' : '';
+        $fieldOutput .= "<option value='' $defaultSelected> global default </option>";
         foreach ($options as $option) {
             $selected = ($option['system_key'] === $fieldValue) ? 'selected' : '';
             $fieldOutput .= "<option value='" . $option['system_key'] . "' $selected >" . $option['system_key'] . "</option>";
