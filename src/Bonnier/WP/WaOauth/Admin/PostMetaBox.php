@@ -31,18 +31,32 @@ class PostMetaBox
         $checked = self::get_setting(self::UNLOCK_SETTING_KEY) === 'true' ? 'checked' : '';
 
         $fieldOutput = "<label>Unlock </label>";
+        // Hidden value is required to save false when checkbox is not checked, otherwise no post value is present
         $fieldOutput .= "<input type='hidden' value='false' name='bp_wa_oauth_unlock'>";
         $fieldOutput .= "<input type='checkbox' value='true' name='bp_wa_oauth_unlock' $checked />";
 
         $fieldValue = self::get_setting(self::REQUIRED_ROLE_SETTING_KEY);
         $fieldOutput .= "<br><br>";
         $fieldOutput .= "<label>Required role to view content </label>";
+
+        // Open select field
         $fieldOutput .= "<select name='bp_wa_oauth_required_role'>";
-        $options = $plugin->settings->get_wa_user_roles();
-        foreach ($options as $option) {
-            $selected = ($option['system_key'] === $fieldValue) ? 'selected' : '';
-            $fieldOutput .= "<option value='" . $option['system_key'] . "' $selected >" . $option['system_key'] . "</option>";
+
+        // Get a list of user roles by system key
+        $userRoles = array_map(function($option){
+            return $option['system_key'];
+        }, $plugin->settings->get_wa_user_roles());
+
+        // Check if the saved value is in the array of user roles to determine if default option is selected
+        $defaultSelected = in_array($fieldValue, $userRoles) ? 'selected' : '';
+        // Prepend default option with no value, so the setting will default to the global option
+        $fieldOutput .= "<option value='' $defaultSelected> Global default </option>";
+
+        foreach ($userRoles as $userRole) {
+            $selected = ($userRole === $fieldValue) ? 'selected' : '';
+            $fieldOutput .= "<option value='" . $userRole . "' $selected >" . $userRole . "</option>";
         }
+        // close Select
         $fieldOutput .= "</select>";
 
         print $fieldOutput;
