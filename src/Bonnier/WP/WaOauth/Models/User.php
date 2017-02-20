@@ -9,7 +9,6 @@ class User
 {
     const ACCESS_TOKEN_META_KEY = 'bp_wa_oauth_access_token';
     const ON_USER_UPDATE_HOOK = 'bp_wa_oauth_on_user_update';
-    const SET_USER_PROPS_HOOK = 'bp_wa_oauth_set_user_props';
 
     public static function get_local_user_id($waId) {
         global $wpdb;
@@ -87,11 +86,6 @@ class User
 
             $localUser = self::set_user_props($localUser, $waUser);
 
-            $localUser = apply_filters(self::ON_USER_UPDATE_HOOK, [
-                'wp' => $localUser,
-                'wa' => $waUser
-            ]);
-
             $updated = wp_update_user($localUser);
 
             return ! is_wp_error($updated);
@@ -122,7 +116,7 @@ class User
          * and/or other fields which has not been set by the WA user above.
          * If these fields are not set, WP will automatically set them to an empty string, every time the user logs in.
          */
-        $localUser = apply_filters(self::SET_USER_PROPS_HOOK, [
+        $localUser = apply_filters(self::ON_USER_UPDATE_HOOK, [
             'wp' => $localUser,
             'wa' => $waUser
         ]);
