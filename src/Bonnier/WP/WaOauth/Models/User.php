@@ -29,6 +29,10 @@ class User
         return $wpdb->update('wp_users', ['user_nicename' => $nicename], ['ID' => $userId], ['%s'], ['%d']);
     }
 
+    public static function update_user_login($userId, $new_login) {
+        global $wpdb;
+        return $wpdb->update('wp_users', ['user_login' => $new_login], ['ID' => $userId], ['%s'], ['%d']);
+    }
 
     public static function get_access_token($userId) {
         return get_user_meta($userId, self::ACCESS_TOKEN_META_KEY, true);
@@ -88,6 +92,14 @@ class User
 
             $updated = wp_update_user($localUser);
 
+            // if a user's login is not already found in the database, we'll update the current one to the one in the $localUser object.
+            if(!get_user_by('login',$localUser->user_login) && !is_wp_error($updated)){
+                global $wpdb;
+
+                $updateUserLogin = self::update_user_login($localUser->ID, $localUser->user_login);
+                return ! is_wp_error( $updateUserLogin );
+            }
+
             return ! is_wp_error($updated);
         }
         return false;
@@ -95,7 +107,7 @@ class User
 
     private static function set_user_props(WP_User $localUser, $waUser) {
         
-        $localUser->user_login = $waUser->username;
+        $localUser->user_login = sanitize_user($waUser->username);
         $localUser->first_name = $waUser->first_name;
         $localUser->last_name = $waUser->last_name;
         $localUser->user_nicename = $waUser->username;
