@@ -29,9 +29,9 @@ class User
         return $wpdb->update('wp_users', ['user_nicename' => $nicename], ['ID' => $userId], ['%s'], ['%d']);
     }
 
-    public static function update_user_login($userId, $new_login) {
+    public static function update_user_login($userObject, $new_login) {
         global $wpdb;
-        return $wpdb->update('wp_users', ['user_login' => $new_login], ['ID' => $userId], ['%s'], ['%d']);
+        return $wpdb->update('wp_users', ['user_login' => $new_login], ['ID' => $userObject->ID], ['%s'], ['%d']);
     }
 
     public static function get_access_token($userId) {
@@ -90,15 +90,8 @@ class User
 
             $localUser = self::set_user_props($localUser, $waUser);
 
-            $updated = wp_update_user($localUser);
-
             // if a user's login is not already found in the database, we'll update the current one to the one in the $localUser object.
-            if(!get_user_by('login',$localUser->user_login) && !is_wp_error($updated)){
-                global $wpdb;
-
-                $updateUserLogin = self::update_user_login($localUser->ID, $localUser->user_login);
-                return ! is_wp_error( $updateUserLogin );
-            }
+            $updated = wp_update_user($localUser) && self::update_user_login($localUser, $localUser->user_login);
 
             return ! is_wp_error($updated);
         }
@@ -133,7 +126,12 @@ class User
             'wa' => $waUser
         ]);
 
-        return $localUser;
+        if ( $localUser instanceof WP_User ) {
+            return $localUser;
+        }
+        else{
+            return $localUser['wp'];
+        }
     }
 
     private static function set_user_roles($localUser, $roles)
