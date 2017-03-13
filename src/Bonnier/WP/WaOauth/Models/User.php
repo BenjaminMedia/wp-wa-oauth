@@ -30,8 +30,14 @@ class User
     }
 
     public static function update_user_login($userObject, $new_login) {
-        global $wpdb;
-        return $wpdb->update('wp_users', ['user_login' => $new_login], ['ID' => $userObject->ID], ['%s'], ['%d']);
+        if($existingUser = get_user_by('login', $new_login)){
+            if($existingUser->ID !== $userObject->ID){
+                global $wpdb;
+                $new_login .= '-2';
+                return $wpdb->update('wp_users', ['user_login' => $new_login], ['ID' => $userObject->ID], ['%s'], ['%d']);
+            }
+            return true;
+        }
     }
 
     public static function get_access_token($userId) {
