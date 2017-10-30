@@ -171,21 +171,6 @@ class ServiceOAuth extends Client
         return $url;
     }
 
-
-    /**
-     * Preppends api/ to the sub url if needed by the set service url
-     *
-     * @param $url
-     * @return string $url the appropriate sub url
-     */
-    private function getSubUrl($url)
-    {
-        if ($this->serviceEndpoint !== self::SERVICE_URL) {
-            $url = 'api/v1/' . $url;
-        }
-        return $url;
-    }
-
     /**
      * Get service url
      *
