@@ -91,7 +91,7 @@ class ServiceOAuth extends Client
             'redirect_uri' => $redirectUrl
         ];
 
-        $response = $this->post($this->getSubUrl('/oauth/token'), ['body' => $data]);
+        $response = $this->post('/oauth/token', ['body' => $data]);
         $response = json_decode($response->getBody(), true);
 
         if (isset($response['error'])) {
@@ -119,7 +119,7 @@ class ServiceOAuth extends Client
 
         if ($this->accessToken) {
 
-            $response = $this->get('api/users/current.json', ['headers' => [
+            $response = $this->get('oauth/user', ['headers' => [
                 'Authorization' => 'Bearer ' . $this->accessToken
             ]]);
 
@@ -150,7 +150,7 @@ class ServiceOAuth extends Client
             $params['accessible_for'] = $userRole;
         }
 
-        return $this->getUrl($this->getSubUrl('oauth/authorize'), $params);
+        return $this->getUrl('oauth/authorize', $params);
     }
 
     /**
@@ -181,7 +181,7 @@ class ServiceOAuth extends Client
     private function getSubUrl($url)
     {
         if ($this->serviceEndpoint !== self::SERVICE_URL) {
-            $url = 'api/' . $url;
+            $url = 'api/v1/' . $url;
         }
         return $url;
     }
