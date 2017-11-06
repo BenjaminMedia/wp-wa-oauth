@@ -190,7 +190,7 @@ class ServiceOAuth extends Client
             return $this->userRoleList;
         }
 
-        $response = $this->get('api/user_roles');
+        $response = $this->get('user_roles');
 
         if ($response->getStatusCode() == 200) {
             $this->userRoleList = json_decode($response->getBody(), true);
