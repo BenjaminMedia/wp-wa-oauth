@@ -50,10 +50,10 @@ request.onload = function () {
     if (request.status >= 200 && request.status < 400) {
         // Success!
         var data = JSON.parse(request.responseText);
-        if(data) {
+        if(data && !settings.loggedIn) {
             bp_wa_oauth_trigger_login();
         }
-    } else {
+    } else if(settings.loggedIn) {
         var logoutRequest = new XMLHttpRequest();
         logoutRequest.open('POST', settings.ajaxurl, true);
         logoutRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
