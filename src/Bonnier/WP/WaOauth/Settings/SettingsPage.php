@@ -208,6 +208,9 @@ class SettingsPage
 
     public function get_api_endpoint($locale = null)
     {
+        if(!$locale) {
+            $locale = $this->get_current_locale();
+        }
         return $this->get_setting_value('api_endpoint', $locale) ?: self::API_ENDPOINT_FALLBACK;
     }
 

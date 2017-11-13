@@ -131,7 +131,7 @@ class OauthLoginRoute
             $redirect = $waUser->url;
         }
 
-        $this->redirect($redirect);
+        return $this->redirect($redirect);
     }
 
     /**

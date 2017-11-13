@@ -41,3 +41,31 @@ window.addEventListener('click', function (event) {
         }
     }
 });
+
+var request = new XMLHttpRequest();
+request.open('GET', settings.api_endpoint + '/oauth/by_session', true);
+request.withCredentials = true;
+
+request.onload = function () {
+    if (request.status >= 200 && request.status < 400) {
+        // Success!
+        var data = JSON.parse(request.responseText);
+        if(data) {
+            bp_wa_oauth_trigger_login();
+        }
+    } else {
+        var logoutRequest = new XMLHttpRequest();
+        logoutRequest.open('POST', settings.ajaxurl, true);
+        logoutRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        logoutRequest.onload = function () {
+            if(logoutRequest.status >= 200 && logoutRequest.status < 400) {
+                var response = JSON.parse(logoutRequest.responseText);
+                if(response.hasOwnProperty('refresh') && response.refresh) {
+                    window.location.reload(true);
+                }
+            }
+        };
+        logoutRequest.send('action=wp_wa_oauth_logout');
+    }
+};
+request.send();
