@@ -46,6 +46,7 @@ function requestLogout()
 {
     var logoutRequest = new XMLHttpRequest();
     logoutRequest.open('POST', clSettings.ajaxurl, true);
+    logoutRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     logoutRequest.onload = function() {
         if(logoutRequest.status >= 200 && logoutRequest.status < 400) {
             var logoutResponse = JSON.parse(logoutRequest.responseText);
