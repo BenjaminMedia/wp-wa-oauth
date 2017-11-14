@@ -91,7 +91,7 @@ class ServiceOAuth extends Client
             'redirect_uri' => $redirectUrl
         ];
 
-        $response = $this->post($this->getSubUrl('/oauth/token'), ['body' => $data]);
+        $response = $this->post('/oauth/token', ['body' => $data]);
         $response = json_decode($response->getBody(), true);
 
         if (isset($response['error'])) {
@@ -119,7 +119,7 @@ class ServiceOAuth extends Client
 
         if ($this->accessToken) {
 
-            $response = $this->get('api/users/current.json', ['headers' => [
+            $response = $this->get('oauth/user', ['headers' => [
                 'Authorization' => 'Bearer ' . $this->accessToken
             ]]);
 
@@ -150,7 +150,7 @@ class ServiceOAuth extends Client
             $params['accessible_for'] = $userRole;
         }
 
-        return $this->getUrl($this->getSubUrl('oauth/authorize'), $params);
+        return $this->getUrl('oauth/authorize', $params);
     }
 
     /**
@@ -168,21 +168,6 @@ class ServiceOAuth extends Client
             $url .= '?' . http_build_query($params);
         }
 
-        return $url;
-    }
-
-
-    /**
-     * Preppends api/ to the sub url if needed by the set service url
-     *
-     * @param $url
-     * @return string $url the appropriate sub url
-     */
-    private function getSubUrl($url)
-    {
-        if ($this->serviceEndpoint !== self::SERVICE_URL) {
-            $url = 'api/' . $url;
-        }
         return $url;
     }
 
@@ -205,7 +190,7 @@ class ServiceOAuth extends Client
             return $this->userRoleList;
         }
 
-        $response = $this->get('api/user_roles');
+        $response = $this->get('user_roles');
 
         if ($response->getStatusCode() == 200) {
             $this->userRoleList = json_decode($response->getBody(), true);

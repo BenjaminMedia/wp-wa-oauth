@@ -238,8 +238,7 @@ class OauthLoginRoute
      */
     private function redirect($to)
     {
-        header("Location: " . $to);
-        exit();
+        wp_redirect($to);
     }
 
     /**
