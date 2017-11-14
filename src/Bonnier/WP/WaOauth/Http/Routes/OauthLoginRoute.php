@@ -250,7 +250,8 @@ class OauthLoginRoute
     	if(!$to) {
             $to = home_url('/');
         }
-        wp_redirect($to);
+        header("Location: " . $to);
+        exit;
     }
 
     /**
