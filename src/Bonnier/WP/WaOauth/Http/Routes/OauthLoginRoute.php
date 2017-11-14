@@ -247,6 +247,9 @@ class OauthLoginRoute
      */
     private function redirect($to)
     {
+    	if(!$to) {
+            $to = home_url('/');
+        }
         wp_redirect($to);
     }
 
