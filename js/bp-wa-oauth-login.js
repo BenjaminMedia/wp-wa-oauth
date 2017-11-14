@@ -42,30 +42,40 @@ window.addEventListener('click', function (event) {
     }
 });
 
-var request = new XMLHttpRequest();
-request.open('GET', settings.api_endpoint + '/oauth/by_session', true);
-request.withCredentials = true;
-
-request.onload = function () {
-    if (request.status >= 200 && request.status < 400) {
-        // Success!
-        var data = JSON.parse(request.responseText);
-        if(data && !settings.loggedIn) {
-            bp_wa_oauth_trigger_login();
-        }
-    } else if(settings.loggedIn) {
-        var logoutRequest = new XMLHttpRequest();
-        logoutRequest.open('POST', settings.ajaxurl, true);
-        logoutRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        logoutRequest.onload = function () {
-            if(logoutRequest.status >= 200 && logoutRequest.status < 400) {
-                var response = JSON.parse(logoutRequest.responseText);
-                if(response.hasOwnProperty('refresh') && response.refresh) {
-                    window.location.reload(true);
-                }
+function requestLogout()
+{
+    var logoutRequest = new XMLHttpRequest();
+    logoutRequest.open('POST', clSettings.ajaxurl, true);
+    logoutRequest.onload = function() {
+        if(logoutRequest.status >= 200 && logoutRequest.status < 400) {
+            var logoutResponse = JSON.parse(logoutRequest.responseText);
+            if(logoutResponse.hasOwnProperty('refresh') && logoutResponse.refresh) {
+                window.location.reload(true);
             }
-        };
-        logoutRequest.send('action=wp_wa_oauth_logout');
-    }
-};
-request.send();
+        }
+    };
+
+    logoutRequest.send('action=wp_wa_oauth_logout');
+}
+
+function requestUserFromCL()
+{
+    var clRequest = new XMLHttpRequest();
+    clRequest.open('GET', clSettings.api_endpoint + '/oauth/by_session', true);
+    clRequest.withCredentials = true;
+
+    clRequest.onload = function() {
+        if(clRequest.status >= 200 && clRequest.status < 400) {
+            var user = JSON.parse(clRequest.responseText);
+            if(user && !clSettings.loggedIn) {
+                bp_wa_oauth_trigger_login();
+            }
+        } else if(clSettings.loggedIn) {
+            requestLogout();
+        }
+    };
+
+    clRequest.send();
+}
+
+requestUserFromCL();
