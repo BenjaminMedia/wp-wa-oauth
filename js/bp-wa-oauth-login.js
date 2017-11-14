@@ -17,6 +17,8 @@ function bp_wa_oauth_trigger_logout(redirectOnComplete) {
         redirectOnComplete = document.location.href;
     }
 
+    $.cookie('user_information', null, { path: '/' });
+    
     window.location = loginUri + '?redirectUri=' + encodeURIComponent(redirectOnComplete);
 }
 
