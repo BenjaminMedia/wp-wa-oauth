@@ -11,15 +11,15 @@ function bp_wa_oauth_trigger_login(redirectOnComplete) {
 
 function bp_wa_oauth_trigger_logout(redirectOnComplete) {
 
-    const loginUri = '/wp-json/bp-wa-oauth/v1/oauth/logout';
+    const logoutUri = '/wp-json/bp-wa-oauth/v1/oauth/logout';
 
     if (typeof redirectOnComplete === 'undefined') {
         redirectOnComplete = document.location.href;
     }
 
     $.cookie('user_information', null, { path: '/' });
-    
-    window.location = loginUri + '?redirectUri=' + encodeURIComponent(redirectOnComplete);
+
+    window.location = logoutUri + '?redirectUri=' + encodeURIComponent(redirectOnComplete);
 }
 
 window.addEventListener('click', function (event) {
@@ -53,8 +53,7 @@ function requestLogout()
         if(logoutRequest.status >= 200 && logoutRequest.status < 400) {
             var logoutResponse = JSON.parse(logoutRequest.responseText);
             if(logoutResponse.hasOwnProperty('refresh') && logoutResponse.refresh) {
-                $.cookie('user_information', null, { path: '/' });
-                window.location.reload(true);
+                bp_wa_oauth_trigger_logout();
             }
         }
     };
