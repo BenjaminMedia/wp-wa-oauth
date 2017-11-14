@@ -22,7 +22,12 @@ class Scripts
 
         $script_src = $plugin->plugin_url . 'js/bp-wa-oauth-login.js';
 
+        $loggedIn = false;
+        if(($user = wp_get_current_user()) && $user->ID) {
+            $loggedIn = true;
+        }
+
         wp_enqueue_script('bp-wa-oauth-login', $script_src);
-        wp_localize_script('bp-wa-oauth-login', 'settings', ['ajaxurl' => admin_url('admin-ajax.php'), 'api_endpoint' => self::$settings->get_api_endpoint(), 'loggedIn' => wp_get_current_user() ? true : false]);
+        wp_localize_script('bp-wa-oauth-login', 'clSettings', ['ajaxurl' => admin_url('admin-ajax.php'), 'api_endpoint' => self::$settings->get_api_endpoint(), 'loggedIn' => $loggedIn]);
     }
 }
