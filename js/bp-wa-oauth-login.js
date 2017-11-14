@@ -51,6 +51,7 @@ function requestLogout()
         if(logoutRequest.status >= 200 && logoutRequest.status < 400) {
             var logoutResponse = JSON.parse(logoutRequest.responseText);
             if(logoutResponse.hasOwnProperty('refresh') && logoutResponse.refresh) {
+                $.cookie('user_information', null, { path: '/' });
                 window.location.reload(true);
             }
         }
