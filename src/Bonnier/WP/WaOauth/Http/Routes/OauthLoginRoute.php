@@ -174,6 +174,8 @@ class OauthLoginRoute
             wp_logout();
         }
 
+        $this->destroy_cookie();
+
         $redirectUri = $request->get_param('redirectUri');
 
         if($redirectUri) {
@@ -181,6 +183,13 @@ class OauthLoginRoute
         }
 
         return new WP_REST_Response('ok', 200);
+    }
+
+    private function destroy_cookie()
+    {
+        unset($_COOKIE['user_information']);
+        setcookie('user_information', null, -1, '/');
+        setcookie('user_information', null, -1, '/');
     }
 
 
@@ -238,8 +247,11 @@ class OauthLoginRoute
      */
     private function redirect($to)
     {
+    	if(!$to) {
+            $to = home_url('/');
+        }
         header("Location: " . $to);
-        exit();
+        exit;
     }
 
     /**

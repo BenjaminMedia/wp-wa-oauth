@@ -12,6 +12,7 @@ namespace Bonnier\WP\WaOauth;
 
 use Bonnier\WP\WaOauth\Admin\PostMetaBox;
 use Bonnier\WP\WaOauth\Assets\Scripts;
+use Bonnier\WP\WaOauth\Http\AjaxHandler;
 use Bonnier\WP\WaOauth\Http\Routes\OauthLoginRoute;
 use Bonnier\WP\WaOauth\Http\Routes\UserUpdateCallbackRoute;
 use Bonnier\WP\WaOauth\Models\User;
@@ -88,10 +89,11 @@ class Plugin
         $this->settings = new SettingsPage();
         $this->loginRoute = new OauthLoginRoute($this->settings);
         new UserUpdateCallbackRoute($this->settings);
+        AjaxHandler::register();
     }
 
     private function boostrap() {
-        Scripts::bootstrap();
+        Scripts::bootstrap($this->settings);
         PostMetaBox::register_meta_box();
     }
 
