@@ -145,6 +145,14 @@ class User
     {
         foreach ($roles as $role) {
             $localUser->set_role(SettingsPage::ROLES_PREFIX . $role);
+            switch($role) {
+                case 'subscribers':
+                    $localUser->set_role(bbp_get_participant_role());
+                    break;
+                case 'users':
+                    $localUser->set_role(bbp_get_spectator_role());
+                    break;
+            }
         }
         return $localUser;
     }
