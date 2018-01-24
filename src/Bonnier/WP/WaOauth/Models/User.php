@@ -50,11 +50,10 @@ class User
     }
 
     public static function create_local_user($waUser, $accessToken) {
-
         $localUser = static::get_local_user($waUser);
 
         $localUser = self::set_user_props($localUser, $waUser);
-
+        
         $userId = wp_insert_user($localUser);
 
         // We have to update the user nicename because wp appends -2 when we call wp_insert_user
@@ -106,7 +105,6 @@ class User
     }
 
     private static function set_user_props(WP_User $localUser, $waUser) {
-        
         $localUser->user_login = sanitize_user($waUser->username);
         $localUser->first_name = $waUser->first_name;
         $localUser->last_name = $waUser->last_name;
@@ -122,7 +120,6 @@ class User
         }
 
         $localUser = self::set_user_roles($localUser, $waUser->roles);
-
         /*
          * this filter is for if you want to insert data into the description field,
          * and/or other fields which has not been set by the WA user above.
@@ -144,7 +141,7 @@ class User
     private static function set_user_roles($localUser, $roles)
     {
         foreach ($roles as $role) {
-            $localUser->set_role(SettingsPage::ROLES_PREFIX . $role);
+            $localUser->add_role(SettingsPage::ROLES_PREFIX . $role);
         }
         return $localUser;
     }
