@@ -154,6 +154,28 @@ class ServiceOAuth extends Client
     }
 
     /**
+     * Get login url
+     *
+     * @param string $redirectUri
+     * @param null|string $userRole the user role required by the user logging in
+     * @return string
+     */
+    public function getRegisterUrl($redirectUri = '', $userRole = null)
+    {
+        $params = [
+            'client_id' => $this->appId,
+            'redirect_uri' => $redirectUri,
+            'response_type' => 'code'
+        ];
+
+        if ($userRole) {
+            $params['accessible_for'] = $userRole;
+        }
+
+        return $this->getUrl('register', $params);
+    }
+
+    /**
      * Generates url with parameters
      *
      * @param $url

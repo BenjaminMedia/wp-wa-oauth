@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Bonnier WhiteAlbum OAuth
- * Version: 1.2.5
+ * Version: 1.5.0
  * Plugin URI: https://github.com/BenjaminMedia/wp-wa-oauth
  * Description: This plugin allows you to integrate your site with the whitealbum oauth user api
  * Author: Bonnier - Alf Henderson

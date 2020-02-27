@@ -36,6 +36,11 @@ class OauthLoginRoute
     const LOGOUT_ROUTE = '/oauth/logout';
 
     /**
+     * The register route.
+     */
+    const REGISTER_ROUTE = '/oauth/register';
+
+    /**
      * The access token cookie lifetime.
      */
     const ACCESS_TOKEN_LIFETIME_HOURS = 24;
@@ -72,7 +77,11 @@ class OauthLoginRoute
             register_rest_route($this->get_route_namespace(), self::LOGOUT_ROUTE, [
                 'methods' => 'GET, POST',
                 'callback' => [$this, 'logout'],
-            ]);;
+            ]);
+            register_rest_route($this->get_route_namespace(), self::REGISTER_ROUTE, [
+                'methods' => 'GET, POST',
+                'callback' => [$this, 'register'],
+            ]);
         });
     }
 
@@ -185,6 +194,64 @@ class OauthLoginRoute
         return new WP_REST_Response('ok', 200);
     }
 
+    /**
+     * The function that handles the user register request
+     *
+     * @param WP_REST_Request $request
+     * @return WP_REST_Response
+     */
+    public function register(WP_REST_Request $request)
+    {
+        $redirectUri = $request->get_param('redirectUri');
+        $postRequiredRole = null;
+
+        // Check for overriding settings from post
+        if($postId = url_to_postid($redirectUri)) {
+            if(PostMetaBox::post_is_unlocked($postId)) {
+                $this->redirect($redirectUri);
+            }
+            if($requiredRole = PostMetaBox::post_required_role($postId)) {
+                $postRequiredRole = $requiredRole;
+            }
+        }
+
+        // Persist auth destination
+        $this->set_auth_destination($redirectUri);
+
+        // Get user from admin service
+        try {
+            $waUser = $this->get_wa_user($request);
+        } catch (HttpException $e) {
+            return new WP_REST_Response(['error' => $e->getMessage()], $e->getCode());
+        }
+
+        // If the user is not logged in, we redirect to the login screen.
+        if (!$waUser) {
+            $this->trigger_register_flow($postRequiredRole);
+        }
+
+        // Save the user locally if the create_local_user setting is on
+        if($this->settings->get_create_local_user($this->settings->get_current_locale())) {
+
+            User::create_local_user($waUser, $this->get_access_token());
+
+            // Auto login local user if the auto_login_local_user setting is on
+            if($this->settings->get_auto_login_local_user($this->settings->get_current_locale())) {
+                User::wp_login_user(User::get_local_user($waUser));
+            }
+        }
+
+        // Check if auth destination has been set
+        $redirect = $this->get_auth_destination();
+
+        if (!$redirect) {
+            // Redirect to user profile
+            $redirect = $waUser->url;
+        }
+
+        $this->redirect($redirect);
+    }
+
     private function destroy_cookie()
     {
         unset($_COOKIE['user_information']);
@@ -207,6 +274,27 @@ class OauthLoginRoute
 
         $this->redirect(
             $this->service->getLoginUrl(
+                $this->get_redirect_uri(),
+                $requiredRole)
+        );
+
+    }
+
+
+    /**
+     * Triggers the login flow by redirecting the user to the login Url
+     * @param null $requiredRole
+     */
+    private function trigger_register_flow($requiredRole = null)
+    {
+        $currentLocale = $this->settings->get_current_locale();
+
+        if(!$requiredRole) {
+            $requiredRole = $this->settings->get_required_user_role($currentLocale);
+        }
+
+        $this->redirect(
+            $this->service->getRegisterUrl(
                 $this->get_redirect_uri(),
                 $requiredRole)
         );
